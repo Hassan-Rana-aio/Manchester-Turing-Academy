@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     EMAIL_SERVER_PORT: int = int(os.environ.get("EMAIL_SERVER_PORT"))
     ADMIN_EMAIL: str = os.environ.get("ADMIN_EMAIL")
     ADMIN_EMAIL_PASSWORD: str = os.environ.get("ADMIN_EMAIL_PASSWORD")
+    ## Brevo HTTP API key (used by helper/send_email.py to send mail over HTTPS)
+    EMAIL_API_KEY: str = os.environ.get("EMAIL_API_KEY", "")
 
     ## FRONTEND URL
     FRONTEND_URL: str = "http://localhost:5173/"

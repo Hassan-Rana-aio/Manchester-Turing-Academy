@@ -1,15 +1,18 @@
 """To send emails"""
 
 """ Importing Email Modules """
-import smtplib
 import threading
-from email.mime.text import MIMEText
+import requests
 from src.apis.v1.core.project_settings import settings
 
 proj_settings = settings()
 
-## seconds before an unreachable mail server gives up (avoids hanging requests)
-SMTP_TIMEOUT = 15
+## Brevo transactional email HTTP API (sends over HTTPS / port 443, which the
+## host does not block - unlike outbound SMTP ports 25/465/587/2525)
+BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
+
+## seconds before a slow/unreachable email service gives up (avoids hanging requests)
+EMAIL_TIMEOUT = 15
 
 
 def _send_in_background(subject, body, recipients):
@@ -48,34 +51,54 @@ def course_assignment_email(user_email, user_name, course_name, course_price):
 
 
 def send_email(subject, body, recipients):
-    SERVER_NAME = (
-        "mail.manchesterturingacademy.co.uk"  # proj_settings.EMAIL_SERVER_NAME
-    )
-    PORT = 587  # proj_settings.EMAIL_SERVER_PORT
-    sender = "admin@manchesterturingacademy.co.uk"  # proj_settings.ADMIN_EMAIL
-    password = "Books654*+B"  # proj_settings.ADMIN_EMAIL_PASSWORD
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = sender
-    msg["To"] = ", ".join(recipients) if isinstance(recipients, list) else recipients
-    try:
-        proj_settings.LOG_MANAGER.log("info", f"Connecting to Server {SERVER_NAME}")
-        with smtplib.SMTP(SERVER_NAME, PORT, timeout=SMTP_TIMEOUT) as smtp_server:
-            smtp_server.starttls()
-            proj_settings.LOG_MANAGER.log(
-                "info", f"Logging in with admin email {sender}"
-            )
-            smtp_server.login(sender, password)
-            proj_settings.LOG_MANAGER.log("info", "Email Logging in successful")
+    """Send an email via the Brevo HTTP API over HTTPS.
 
-            proj_settings.LOG_MANAGER.log("info", "Sending Email")
-            smtp_server.sendmail(sender, recipients, msg.as_string())
-            proj_settings.LOG_MANAGER.log("info", "Email sent!")
+    `recipients` may be a single email string or a list of email strings.
+    Returns True on success, False on failure (failures are logged, never raised).
+    """
+    api_key = proj_settings.EMAIL_API_KEY
+    sender_email = proj_settings.ADMIN_EMAIL
+    sender_name = proj_settings.PROJECT_NAME
 
-    except Exception as e:
+    if not api_key:
         proj_settings.LOG_MANAGER.log(
-            "info", f"Email sending failed with an exception {e}"
+            "error", "EMAIL_API_KEY is not configured - cannot send email"
         )
         return False
 
-    return True
+    ## normalize recipients to Brevo's expected format
+    recipient_list = recipients if isinstance(recipients, list) else [recipients]
+    to = [{"email": email} for email in recipient_list]
+
+    payload = {
+        "sender": {"name": sender_name, "email": sender_email},
+        "to": to,
+        "subject": subject,
+        "textContent": body,
+    }
+    headers = {
+        "api-key": api_key,
+        "Content-Type": "application/json",
+        "accept": "application/json",
+    }
+
+    try:
+        proj_settings.LOG_MANAGER.log("info", f"Sending email to {recipient_list}")
+        response = requests.post(
+            BREVO_API_URL, json=payload, headers=headers, timeout=EMAIL_TIMEOUT
+        )
+        if response.status_code in (200, 201):
+            proj_settings.LOG_MANAGER.log("info", "Email sent!")
+            return True
+
+        proj_settings.LOG_MANAGER.log(
+            "error",
+            f"Email sending failed: HTTP {response.status_code} - {response.text}",
+        )
+        return False
+
+    except Exception as e:
+        proj_settings.LOG_MANAGER.log(
+            "error", f"Email sending failed with an exception {e}"
+        )
+        return False
