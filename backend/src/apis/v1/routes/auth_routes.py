@@ -5,7 +5,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from src.apis.v1.validators.auth_validator import (
     AuthLoginRequestValidator,
-    ForgotPasswordRequestValidator,
     ResetPasswordRequestValidator,
 )
 from src.apis.v1.utils.get_uuid import get_uuidv4
@@ -40,34 +39,15 @@ async def login(
 
 
 @router.post(
-    "/auth/forgot-password",
-    summary="Request a password reset OTP to be emailed to the user",
-)
-async def forgot_password(
-    params: ForgotPasswordRequestValidator,
-    db: Session = Depends(get_db),
-):
-    """
-    This route emails a one-time password (OTP) to the user so they can
-    reset a forgotten password.
-    """
-    logger.log("info", "Performing Forgot Password")
-    AuthController(db=db).forgot_password(params=params)
-    return {
-        "message": "If an account exists, a password reset OTP has been sent to its email."
-    }
-
-
-@router.post(
     "/auth/reset-password",
-    summary="Reset the password using the emailed OTP",
+    summary="Reset the password after verifying the user's identity (no email)",
 )
 async def reset_password(
     params: ResetPasswordRequestValidator,
     db: Session = Depends(get_db),
 ):
     """
-    This route verifies the emailed OTP and sets the new password.
+    This route verifies the user's identity details and sets the new password.
     """
     logger.log("info", "Performing Reset Password")
     AuthController(db=db).reset_password(params=params)

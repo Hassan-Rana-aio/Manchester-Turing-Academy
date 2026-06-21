@@ -1,5 +1,6 @@
 """This file has the validators responsible for validating auth API"""
 
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -10,16 +11,13 @@ class AuthLoginRequestValidator(BaseModel):
     user_password: str
 
 
-class ForgotPasswordRequestValidator(BaseModel):
-    """To validate forgot password request (sends OTP to user email)"""
-
-    user_identity: str
-
-
 class ResetPasswordRequestValidator(BaseModel):
-    """To validate reset password request using the emailed OTP"""
+    """To validate a password reset request that verifies the user's
+    identity (no email) before setting a new password."""
 
     user_identity: str
-    otp: str = Field(..., min_length=6, max_length=6)
+    first_name: str = Field(..., max_length=64)
+    last_name: str = Field(..., max_length=64)
+    company_name: Optional[str] = Field(None, max_length=64)
     new_password: str = Field(..., max_length=64)
     confirm_password: str = Field(..., max_length=64)

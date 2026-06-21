@@ -2,7 +2,6 @@
 
 const apiRoutes = {
   LOGIN: "/auth/signin",
-  FORGOT_PASSWORD: "/auth/forgot-password",
   RESET_PASSWORD: "/auth/reset-password",
   USER: "/user/",
   COURSE: "/course/",

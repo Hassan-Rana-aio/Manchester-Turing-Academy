@@ -2,25 +2,19 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button";
 import Loader from "../../components/Loader/Loader";
-import {
-  forgotPasswordService,
-  resetPasswordService,
-} from "../../services/Auth";
-import {
-  forgotPasswordValidator,
-  resetPasswordValidator,
-} from "../../validators/UserValidators";
+import { resetPasswordService } from "../../services/Auth";
+import { resetPasswordValidator } from "../../validators/UserValidators";
 import InputFieldWithLabel from "../../components/InputFieldWithLabel/InputFieldWithLabel";
 import { toast } from "react-toastify";
 import { REMEMBER_KEY } from "../../constants/auth";
 
 const ForgotPassword = () => {
   const [loader, setLoader] = useState(false);
-  // step 1 => request OTP, step 2 => enter OTP and set a new password
-  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     user_identity: "",
-    otp: "",
+    first_name: "",
+    last_name: "",
+    company_name: "",
     new_password: "",
     confirm_password: "",
   });
@@ -36,28 +30,7 @@ const ForgotPassword = () => {
     }));
   }
 
-  // step 1: request an OTP to be emailed to the user
-  const requestOtp = async (data) => {
-    setLoader(true);
-    if (forgotPasswordValidator(data)) {
-      try {
-        const response = await forgotPasswordService({
-          user_identity: data.user_identity,
-        });
-
-        if (response.status === 200) {
-          toast.success(response?.data?.message);
-          setStep(2);
-        }
-      } catch {
-        setLoader(false);
-      }
-    }
-
-    setLoader(false);
-  };
-
-  // step 2: verify the OTP and set the new password
+  // verify identity details and set the new password (no email)
   const resetPassword = async (data) => {
     setLoader(true);
     if (resetPasswordValidator(data)) {
@@ -65,8 +38,7 @@ const ForgotPassword = () => {
         const response = await resetPasswordService(data);
 
         if (response.status === 200) {
-          // password changed -> drop any stale remembered credentials so the
-          // sign in form does not prefill the old password
+          // drop any stale remembered credentials so the old password is not prefilled
           localStorage.removeItem(REMEMBER_KEY);
           toast.success(response?.data?.message);
           navigate("/signin");
@@ -82,91 +54,78 @@ const ForgotPassword = () => {
   return (
     <div className="grid justify-center md:py-0 lg:py-0">
       <div className="grid gap-4">
-        <p className="text-black text-2xl font-medium">Forgot Password</p>
+        <p className="text-black text-2xl font-medium">Reset Password</p>
+        <p className="text-sm text-gray-600 max-w-sm">
+          Confirm your account details below to verify it&apos;s you, then set a
+          new password.
+        </p>
 
-        {step === 1 ? (
-          <>
-            <p className="text-sm text-gray-600 max-w-sm">
-              Enter your email or username and we&apos;ll send a one-time
-              password (OTP) to your registered email.
-            </p>
-            <InputFieldWithLabel
-              type={"text"}
-              labelText={"User Identity"}
-              placeholder={"Enter your email or username"}
-              onChange={handleInputChange}
-              id={"user_identity"}
-              name={"user_identity"}
-              value={formData.user_identity}
-            />
-            {loader === true ? (
-              <Loader height={48} />
-            ) : (
-              <Button
-                buttonText={"Send OTP"}
-                buttonClass={
-                  "px-2 py-2 bg-buttonBlue text-white hover:bg-buttonBlueDark"
-                }
-                funcToCall={requestOtp}
-                params={formData}
-              />
-            )}
-          </>
+        <InputFieldWithLabel
+          type={"text"}
+          labelText={"Email or Username"}
+          placeholder={"Enter your email or username"}
+          onChange={handleInputChange}
+          id={"user_identity"}
+          name={"user_identity"}
+          value={formData.user_identity}
+        />
+        <InputFieldWithLabel
+          type={"text"}
+          labelText={"First Name"}
+          placeholder={"Enter your first name"}
+          onChange={handleInputChange}
+          id={"first_name"}
+          name={"first_name"}
+          value={formData.first_name}
+        />
+        <InputFieldWithLabel
+          type={"text"}
+          labelText={"Last Name"}
+          placeholder={"Enter your last name"}
+          onChange={handleInputChange}
+          id={"last_name"}
+          name={"last_name"}
+          value={formData.last_name}
+        />
+        <InputFieldWithLabel
+          type={"text"}
+          labelText={"Company Name (if any)"}
+          placeholder={"Enter your company name"}
+          onChange={handleInputChange}
+          id={"company_name"}
+          name={"company_name"}
+          value={formData.company_name}
+        />
+        <InputFieldWithLabel
+          type={"password"}
+          labelText={"New Password"}
+          placeholder={"Enter your new password"}
+          onChange={handleInputChange}
+          id={"new_password"}
+          name={"new_password"}
+          value={formData.new_password}
+        />
+        <InputFieldWithLabel
+          type={"password"}
+          labelText={"Confirm New Password"}
+          placeholder={"Re-enter your new password"}
+          onChange={handleInputChange}
+          id={"confirm_password"}
+          name={"confirm_password"}
+          value={formData.confirm_password}
+        />
+
+        {loader === true ? (
+          <Loader height={48} />
         ) : (
-          <>
-            <p className="text-sm text-gray-600 max-w-sm">
-              We&apos;ve sent a 6 digit OTP to your email. Enter it below along
-              with your new password. The OTP is valid for 30 minutes.
-            </p>
-            <InputFieldWithLabel
-              type={"text"}
-              labelText={"OTP"}
-              placeholder={"Enter the 6 digit OTP"}
-              onChange={handleInputChange}
-              id={"otp"}
-              name={"otp"}
-              value={formData.otp}
-            />
-            <InputFieldWithLabel
-              type={"password"}
-              labelText={"New Password"}
-              placeholder={"Enter your new password"}
-              onChange={handleInputChange}
-              id={"new_password"}
-              name={"new_password"}
-              value={formData.new_password}
-            />
-            <InputFieldWithLabel
-              type={"password"}
-              labelText={"Confirm New Password"}
-              placeholder={"Re-enter your new password"}
-              onChange={handleInputChange}
-              id={"confirm_password"}
-              name={"confirm_password"}
-              value={formData.confirm_password}
-            />
-            <p className="text-sm">
-              Didn&apos;t get the OTP?{" "}
-              <button
-                className="text-textBlue hover:font-semibold"
-                onClick={() => requestOtp(formData)}
-              >
-                Resend
-              </button>
-            </p>
-            {loader === true ? (
-              <Loader height={48} />
-            ) : (
-              <Button
-                buttonText={"Reset Password"}
-                buttonClass={
-                  "px-2 py-2 bg-buttonBlue text-white hover:bg-buttonBlueDark"
-                }
-                funcToCall={resetPassword}
-                params={formData}
-              />
-            )}
-          </>
+          <Button
+            buttonText={"Reset Password"}
+            buttonClass={
+              "px-2 py-2 bg-buttonBlue text-white hover:bg-buttonBlueDark"
+            }
+            funcToCall={resetPassword}
+            params={formData}
+          />
         )}
 
         <p className="text-base">

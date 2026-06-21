@@ -46,21 +46,15 @@ export const loginValidator = (formData) => {
   return true;
 };
 
-export const forgotPasswordValidator = (formData) => {
+export const resetPasswordValidator = (formData) => {
   if (Validations.isEmpty(formData?.user_identity)) {
     toast.error("Please enter your email or username");
     return false;
-  }
-
-  return true;
-};
-
-export const resetPasswordValidator = (formData) => {
-  if (Validations.isEmpty(formData?.otp)) {
-    toast.error("OTP cannot be empty");
+  } else if (Validations.isEmpty(formData?.first_name)) {
+    toast.error("First Name cannot be empty");
     return false;
-  } else if (formData?.otp?.length !== 6 || !Validations.isNumber(formData?.otp)) {
-    toast.error("OTP must be a 6 digit number");
+  } else if (Validations.isEmpty(formData?.last_name)) {
+    toast.error("Last Name cannot be empty");
     return false;
   } else if (Validations.isEmpty(formData?.new_password)) {
     toast.error("New Password cannot be empty");

@@ -11,14 +11,7 @@ const signInService = async (formData) => {
 
 export default signInService;
 
-/** Request a password reset OTP to be emailed to the user */
-export const forgotPasswordService = async (formData) => {
-  const response = await apiInstance.post(apiRoutes.FORGOT_PASSWORD, formData);
-
-  return response;
-};
-
-/** Reset the password using the emailed OTP */
+/** Reset the password after verifying the user's identity (no email) */
 export const resetPasswordService = async (formData) => {
   const response = await apiInstance.post(apiRoutes.RESET_PASSWORD, formData);
 
