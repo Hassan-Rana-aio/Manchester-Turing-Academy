@@ -1,0 +1,34 @@
+# ---- Python / backend ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+*.log
+SERVER_LOGS*
+
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+frontend/build/
+.vite/
+
+# ---- Secrets / environment (do NOT commit) ----
+.env
+*.env
+!**/template.env
+!**/prod.env.example
+backend/envs/.env.*
+database/.env
+database/prod.env
+
+# ---- Uploaded / generated content (provided via volume in prod) ----
+backend/static/course_pdfs/*
+!backend/static/course_pdfs/.gitkeep
+
+# ---- OS / editor ----
+.DS_Store
+*.swp
+.idea/
+.vscode/

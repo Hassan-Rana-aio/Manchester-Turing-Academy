@@ -1,0 +1,52 @@
+services:
+  server:
+    container_name: fastai_server
+    build:
+      context: ./backend
+      args:
+        - DB_NAME
+        - DB_USER
+        - DB_PASSWORD
+        - SECRET_KEY
+        - STRIPE_SECRET_KEY
+        - EMAIL_SERVER_NAME
+        - EMAIL_SERVER_PORT
+        - ADMIN_EMAIL
+        - ADMIN_EMAIL_PASSWORD
+        - FRONTEND_URL
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      - DB_HOST=fastai_database
+      - DB_PORT=5432
+    ports:
+      - '8007:8008'
+    volumes:
+      - /var/app_data/MTA:/app/static/course_pdfs
+    links:
+      - database
+    depends_on:
+      - database
+    networks:
+    - fastai_app_network
+  
+  database:
+    image: postgres:14-alpine
+    container_name: fastai_database
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    ports:
+      - '32006:5432'
+    networks:
+      - "fastai_app_network"
+
+
+networks:
+  fastai_app_network:
+    driver: bridge
