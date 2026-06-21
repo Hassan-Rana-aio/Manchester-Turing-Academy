@@ -11,10 +11,8 @@ import { REMEMBER_KEY } from "../../constants/auth";
 const ForgotPassword = () => {
   const [loader, setLoader] = useState(false);
   const [formData, setFormData] = useState({
-    user_identity: "",
-    first_name: "",
-    last_name: "",
-    company_name: "",
+    email: "",
+    username: "",
     new_password: "",
     confirm_password: "",
   });
@@ -56,45 +54,27 @@ const ForgotPassword = () => {
       <div className="grid gap-4">
         <p className="text-black text-2xl font-medium">Reset Password</p>
         <p className="text-sm text-gray-600 max-w-sm">
-          Confirm your account details below to verify it&apos;s you, then set a
+          Confirm your email and username to verify it&apos;s you, then set a
           new password.
         </p>
 
         <InputFieldWithLabel
           type={"text"}
-          labelText={"Email or Username"}
-          placeholder={"Enter your email or username"}
+          labelText={"Email"}
+          placeholder={"Enter your account email"}
           onChange={handleInputChange}
-          id={"user_identity"}
-          name={"user_identity"}
-          value={formData.user_identity}
+          id={"email"}
+          name={"email"}
+          value={formData.email}
         />
         <InputFieldWithLabel
           type={"text"}
-          labelText={"First Name"}
-          placeholder={"Enter your first name"}
+          labelText={"Username"}
+          placeholder={"Enter your username"}
           onChange={handleInputChange}
-          id={"first_name"}
-          name={"first_name"}
-          value={formData.first_name}
-        />
-        <InputFieldWithLabel
-          type={"text"}
-          labelText={"Last Name"}
-          placeholder={"Enter your last name"}
-          onChange={handleInputChange}
-          id={"last_name"}
-          name={"last_name"}
-          value={formData.last_name}
-        />
-        <InputFieldWithLabel
-          type={"text"}
-          labelText={"Company Name (if any)"}
-          placeholder={"Enter your company name"}
-          onChange={handleInputChange}
-          id={"company_name"}
-          name={"company_name"}
-          value={formData.company_name}
+          id={"username"}
+          name={"username"}
+          value={formData.username}
         />
         <InputFieldWithLabel
           type={"password"}

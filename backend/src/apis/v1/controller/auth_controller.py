@@ -60,9 +60,8 @@ class AuthController:
 
     def reset_password(self, params: ResetPasswordRequestValidator) -> None:
         """
-        Reset a password without email: the user is identified by their
-        username/email and their identity is verified against details held on
-        the account (first name, last name, and company name when present).
+        Reset a password without email: the account is looked up by email and
+        the user's identity is verified by matching the username on file.
         On a successful match the new password is set.
         """
 
@@ -71,8 +70,8 @@ class AuthController:
                 exp_msg="New password and confirm password do not match"
             )
 
-        user: Optional[User] = self._get_user_by_identity(
-            user_identity=params.user_identity
+        user: Optional[User] = UserService(db=self.db).get_user_by_email(
+            user_email=params.email
         )
 
         ## generic message so we never reveal which specific detail was wrong
@@ -80,18 +79,7 @@ class AuthController:
             exp_msg="Account details do not match our records. Please check and try again."
         )
 
-        if not user:
-            raise mismatch
-
-        ## verify the supplied identity details against the account
-        if _norm(params.first_name) != _norm(user.first_name):
-            raise mismatch
-
-        if _norm(params.last_name) != _norm(user.last_name):
-            raise mismatch
-
-        ## when the account has a company name on file, require it to match too
-        if user.company_name and _norm(params.company_name) != _norm(user.company_name):
+        if not user or _norm(params.username) != _norm(user.username):
             raise mismatch
 
         UserService(db=self.db).update_password(
